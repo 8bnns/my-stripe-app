@@ -11,9 +11,6 @@ importers:
       '@stripe/ui-extension-sdk':
         specifier: ^9.0.0
         version: 9.1.0(stripe@13.11.0)
-      stripe:
-        specifier: ^13.4.0
-        version: 13.11.0
     devDependencies:
       '@stripe/ui-extension-tools':
         specifier: ^0.0.1

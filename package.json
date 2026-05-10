@@ -5,8 +5,7 @@
   "private": true,
   "license": "UNLICENSED",
   "dependencies": {
-    "@stripe/ui-extension-sdk": "^9.0.0",
-    "stripe": "^13.4.0"
+    "@stripe/ui-extension-sdk": "^9.0.0"
   },
   "engines": {
     "node": ">=14"
