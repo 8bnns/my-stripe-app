@@ -1,9 +1,9 @@
 {
-  "name": "com.example.my-stripe-app",
+  "name": "com.mohamadalhabshan.my-stripe-app",
   "version": "0.0.1",
-  "description": "Test",
+  "description": "A Stripe App UI extension for dashboard customization",
   "private": true,
-  "license": "~~proprietary~~",
+  "license": "UNLICENSED",
   "dependencies": {
     "@stripe/ui-extension-sdk": "^9.0.0",
     "stripe": "^13.4.0"

@@ -1,8 +1,8 @@
 {
-    "id": "com.example.my-stripe-app",
+    "id": "com.mohamadalhabshan.my-stripe-app",
     "version": "0.0.1",
     "name": "My Stripe App",
-    "icon": "",
+    "icon": "./src/views/brand_icon.svg",
     "permissions": [],
     "ui_extension": {
         "views": [
@@ -22,7 +22,7 @@
         "content_security_policy": {
             "connect-src": null,
             "image-src": null,
-            "purpose": ""
+            "purpose": "Allows external resources and image loading"
         }
     }
 }

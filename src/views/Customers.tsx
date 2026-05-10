@@ -1,20 +1,15 @@
-import {
-  Box,
-  ContextView,
-  Divider,
-  Inline,
-  Link,
-} from "@stripe/ui-extension-sdk/ui";
+import { Box, ContextView, Divider, Inline } from "@stripe/ui-extension-sdk/ui";
 import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
 
 import BrandIcon from "./brand_icon.svg";
+import AppFooter from "../components/AppFooter";
 
 /**
  * This is a view that is rendered in the Stripe dashboard's customer list page.
  * In stripe-app.json, this view is configured with stripe.dashboard.customer.list viewport.
  * You can add a new view by running "stripe apps add view" from the CLI.
  */
-const Customers = ({ userContext, environment }: ExtensionContextValue) => {
+const Customers = (_: ExtensionContextValue) => {
   return (
     <ContextView
       title="Customers page"
@@ -24,38 +19,7 @@ const Customers = ({ userContext, environment }: ExtensionContextValue) => {
         label: "Stripe Apps docs",
         href: "https://stripe.com/docs/stripe-apps",
       }}
-      footerContent={
-        <Box css={{ marginBottom: "medium" }}>
-          Questions? Get help with your app from the{" "}
-          <Link
-            external
-            href="https://stripe.com/docs/stripe-apps"
-            target="_blank"
-            type="secondary"
-          >
-            Stripe Apps docs
-          </Link>
-          ,
-          <Link
-            external
-            href="https://support.stripe.com/"
-            target="_blank"
-            type="secondary"
-          >
-            Stripe Support
-          </Link>
-          , or the{" "}
-          <Link
-            external
-            href="https://discord.com/invite/stripe"
-            target="_blank"
-            type="secondary"
-          >
-            Stripe Developers Discord
-          </Link>
-          .
-        </Box>
-      }
+      footerContent={<AppFooter />}
     >
       <Box css={{ stack: "y", rowGap: "large" }}>
         <Box>
