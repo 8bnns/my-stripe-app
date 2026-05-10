@@ -20,3 +20,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 install-deps.log
+
+# media
+*.mp4
+*.mov
+*.avi
