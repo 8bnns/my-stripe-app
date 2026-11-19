@@ -1,340 +1,117 @@
 # My Stripe App
 
-A Stripe App — a UI extension that renders custom panels inside the Stripe Dashboard. Built with TypeScript and React using the `@stripe/ui-extension-sdk`.
+A private Stripe Dashboard UI extension built with TypeScript, React, and `@stripe/ui-extension-sdk`. The current application is the Stripe starter experience: it renders informational panels and does not fetch customer data or call a backend.
 
-## Quick Start
+## Requirements
 
-### Prerequisites
-- Node.js >= 14
-- [Stripe CLI](https://stripe.com/docs/stripe-cli)
-- pnpm (or npm/yarn)
+- Node.js 14 or newer, matching `package.json`.
+- pnpm.
+- [Stripe CLI](https://stripe.com/docs/stripe-cli) for local serving and uploads.
+- A Stripe account authorized to develop and upload the app.
 
-### Installation & Development
+## Install and validate
 
 ```bash
-# Install dependencies
 pnpm install
-
-# Run the app locally in the Stripe Dashboard (requires Stripe CLI)
-stripe apps serve
-
-# Run tests
-pnpm test
-
-# Run linting
+pnpm test:manifest
 pnpm lint
-```
-
-### Deployment
-
-```bash
-# Publish the app to Stripe
-stripe apps upload
-```
-
-## Project Structure
-
-```
-my-stripe-app/
-├── stripe-app.json          # App manifest and configuration
-├── package.json             # Dependencies and scripts
-├── tsconfig.json            # TypeScript configuration
-├── jest.config.js           # Jest test configuration
-├── src/
-│   └── views/               # React view components
-│       ├── Home.tsx         # Dashboard homepage panel
-│       ├── Home.test.tsx
-│       ├── Customers.tsx    # Customer list page panel
-│       ├── Customers.test.tsx
-│       ├── CustomerDetails.tsx  # Customer detail page panel
-│       ├── CustomerDetails.test.tsx
-│       └── brand_icon.svg   # Brand icon asset
-└── .build/                  # Compiled artifacts (generated)
-    ├── manifest.js
-    ├── ext.js
-    └── ext.min.js
-```
-
-## Architecture Overview
-
-### Viewport-to-Component Mapping
-
-The app registers three views in the Stripe Dashboard via `stripe-app.json`:
-
-| Viewport | Component | Purpose |
-| --- | --- | --- |
-| `stripe.dashboard.home.overview` | Home | Dashboard homepage panel |
-| `stripe.dashboard.customer.list` | Customers | Customer list page panel |
-| `stripe.dashboard.customer.detail` | CustomerDetails | Individual customer detail panel |
-
-When a user navigates to a Stripe Dashboard location, the corresponding React component is automatically mounted and rendered.
-
-### Core Components
-
-#### Home (`src/views/Home.tsx`)
-- **Purpose**: Introduces users to the Stripe Apps framework
-- **Features**: 
-  - Links to Stripe Apps documentation
-  - Guidance for navigating to other views
-  - Help resources (docs, support, Discord)
-- **Props**: Receives `ExtensionContextValue` containing `userContext` and `environment`
-- **Responsibilities**: Educational content and documentation links
-
-#### Customers (`src/views/Customers.tsx`)
-- **Purpose**: Renders on the customer list page
-- **Features**:
-  - Informs users about customer interaction
-  - Links to documentation
-  - Help resources
-- **Props**: Receives `ExtensionContextValue`
-- **Responsibilities**: Template component ready for customer list functionality
-
-#### CustomerDetails (`src/views/CustomerDetails.tsx`)
-- **Purpose**: Renders on individual customer detail pages
-- **Features**:
-  - Demonstrates SDK utility usage (clipboard operations)
-  - Provides next steps for app development
-  - UI component composition patterns
-- **Props**: Receives `ExtensionContextValue`
-- **Interactions**: Implements `useCallback` hook with clipboard copy functionality
-- **Error Handling**: Wraps SDK utilities in try-catch with console logging
-
-### UI Components & SDK Utilities
-
-All views use the `@stripe/ui-extension-sdk` library:
-
-**UI Components** (`@stripe/ui-extension-sdk/ui`):
-- `ContextView` — Container component providing layout, branding, and footer
-- `Box` — Layout and spacing utility
-- `Button` — Interactive button element
-- `Link` — External navigation links
-- `Icon` — Icon rendering
-- `Inline` — Inline text styling
-- `Divider` — Visual separator
-
-**Utilities** (`@stripe/ui-extension-sdk/utils`):
-- `clipboardWriteText()` — Copy text to clipboard with error handling
-
-**Testing** (`@stripe/ui-extension-sdk/testing`):
-- `render()` — Component testing utility
-- `getMockContextProps()` — Mock context generator for tests
-
-## Data Flow & Interactions
-
-### Component Initialization
-1. Stripe Dashboard detects user navigation to a registered viewport
-2. Dashboard injects the mapped component with `ExtensionContextValue` props
-3. Component receives `userContext` (user/account information) and `environment` (API endpoints, auth)
-4. Component renders within the Dashboard UI
-
-### Communication Methods
-- **UI Components**: SDK provides styled, accessible components for rendering
-- **External Links**: Components include links to documentation and support resources
-- **SDK Utilities**: Access to browser APIs (clipboard, etc.) through SDK methods
-- **No Inter-component Communication**: Views are isolated and do not communicate with each other
-
-### Error Handling Pattern
-The `CustomerDetails` component demonstrates the current error handling approach:
-
-```typescript
-const writeToClipboard = useCallback(async () => {
-  try {
-    await clipboardWriteText(CLIPBOARD_TEXT);
-    // Success: text copied silently
-  } catch (e) {
-    console.error("Writing to the clipboard failed.");
-    // Error logged to console; no user notification
-  }
-}, []);
-```
-
-**Current Limitations**:
-- Errors log to console only (no user-facing notifications)
-- No recovery mechanisms or retry logic
-- No global error boundary or centralized error handling
-- No logging infrastructure beyond `console.error()`
-
-## Development Setup
-
-### TypeScript Configuration
-- Extends `@stripe/ui-extension-tools/tsconfig.ui-extension`
-- No custom overrides needed; uses Stripe's preset
-- Ensures compatibility with the SDK
-
-### Testing Framework
-- **Test Runner**: Jest (configured via `@stripe/ui-extension-tools/jest.config.ui-extension`)
-- **Testing Utilities**: `@stripe/ui-extension-sdk/testing`
-- **Test Pattern**: Mount components with mock context props and assert rendering
-
-**Example Test**:
-```typescript
-import { render, getMockContextProps } from "@stripe/ui-extension-sdk/testing";
-import { ContextView } from "@stripe/ui-extension-sdk/ui";
-import Home from "./Home";
-
-describe("Home", () => {
-  it("renders ContextView", () => {
-    const { wrapper } = render(<Home {...getMockContextProps()} />);
-    expect(wrapper.find(ContextView)).toContainText("save to reload this view");
-  });
-});
-```
-
-**Running Tests**:
-```bash
-# Run all tests
 pnpm test
-
-# Run a specific test file
-pnpm test src/views/Home.test.tsx
-
-# Watch mode
-pnpm test --watch
 ```
 
-### Linting
-- **Linter**: ESLint
-- **Config**: Extends `@stripe/ui-extension-tools/eslintrc.ui-extension.js`
-- **Run**: `pnpm lint`
+Run all three checks with:
 
-## Build & Deployment
+```bash
+pnpm check
+```
 
-### Build Process
-The Stripe CLI handles building and bundling:
-- TypeScript compilation
-- Bundle optimization
-- Asset processing
-- Manifest generation
+`test:manifest` uses only Node.js built-in modules. It checks required manifest fields, unique viewports and components, matching package/app versions, and the presence of each referenced view source file. It also warns about unrestricted content-security-policy directives.
 
-Compiled artifacts are stored in `.build/`:
-- `manifest.js` — App manifest
-- `ext.js` — Full bundle
-- `ext.min.js` — Minified bundle
+## Local development
 
-### Local Development
 ```bash
 stripe apps serve
 ```
-- Serves the app locally
-- Auto-reloads on file changes
-- Requires Stripe CLI configuration and authentication
 
-### Deployment
+The Stripe CLI builds and serves the extension inside the Stripe Dashboard. Authentication and any required Stripe setup must be completed locally; credentials are not stored in this repository.
+
+Run one component test or watch tests with:
+
 ```bash
-stripe apps upload
+pnpm test src/views/Home.test.tsx
+pnpm test -- --watch
 ```
-- Publishes the app to Stripe
-- Makes it available in your Stripe Dashboard
 
-## Dependencies
+## Registered views
 
-### Production Dependencies
-- **@stripe/ui-extension-sdk** (^9.0.0) — Core SDK providing UI components, context, utilities, and testing helpers
-- **stripe** (^13.4.0) — Stripe Node.js SDK for server-side API calls (included for future use)
+| Viewport | Component | Current behavior |
+| --- | --- | --- |
+| `stripe.dashboard.home.overview` | `Home` | Introduces the starter app and available views. |
+| `stripe.dashboard.customer.list` | `Customers` | Explains navigation to customer details. |
+| `stripe.dashboard.customer.detail` | `CustomerDetails` | Demonstrates UI components and clipboard interaction. |
 
-### Development Dependencies
-- **@stripe/ui-extension-tools** (^0.0.1) — Tooling, configs, and presets
-- **@types/jest** (^27.5.2) — Jest type definitions
-- **@types/react** (^17.0.2) — React type definitions
+The mapping is declared in `stripe-app.json`. Tests use the SDK's `render` and `getMockContextProps` helpers rather than React Testing Library.
 
-## Configuration Files
+## Project structure
 
-### stripe-app.json
-The app manifest defining:
-- **id**: Unique app identifier (`com.example.my-stripe-app`)
-- **version**: Semantic version (`0.0.1`)
-- **name**: Display name (`My Stripe App`)
-- **ui_extension**: Viewport registrations and CSP headers
-- **permissions**: Currently empty; add required permissions as needed
+```text
+my-stripe-app/
+├── stripe-app.json
+├── package.json
+├── tsconfig.json
+├── jest.config.js
+├── scripts/
+│   └── validate-manifest.mjs
+└── src/
+    └── views/
+        ├── Home.tsx
+        ├── Home.test.tsx
+        ├── Customers.tsx
+        ├── Customers.test.tsx
+        ├── CustomerDetails.tsx
+        ├── CustomerDetails.test.tsx
+        └── brand_icon.svg
+```
 
-### Content Security Policy (CSP)
-- `connect-src`: Currently `null` (allows all); restrict as needed
-- `image-src`: Currently `null` (allows all); restrict as needed
+Generated `.build/` output, dependencies, coverage, and local environment files are ignored.
 
-## Runtime Behavior
+## Security and external data
 
-### Application Lifecycle
-1. **Load**: Stripe Dashboard reads the app manifest
-2. **Register**: App registers views for the specified viewports
-3. **Inject**: When user navigates, Dashboard injects the component with context props
-4. **Render**: Component renders synchronously within the Dashboard UI
-5. **Interact**: Users interact with UI; components handle events via SDK utilities
+**Never place Stripe secret keys in a UI extension, browser bundle, source file, or committed environment file.** The current views must not import the `stripe` Node.js SDK or call Stripe API endpoints directly with secret credentials.
 
-### Current Workflows
-- **Home View**: Static information display and navigation guidance
-- **Customers View**: Placeholder awaiting implementation
-- **CustomerDetails View**: Demonstrates clipboard copy interaction with error handling
+If the app later needs privileged Stripe API operations:
 
-### No Backend Integration
-Current views are purely UI-driven with no API calls. To integrate with Stripe APIs:
-1. Use the `stripe` package (already included)
-2. Call Stripe API endpoints from component event handlers
-3. Implement proper error handling and loading states
-4. Add authentication and authorization checks
+1. Implement them in a separately secured backend.
+2. Keep secret keys in that backend's secret manager or environment.
+3. Authenticate the extension user and authorize every requested operation.
+4. Validate inputs server-side and return only the data the view needs.
+5. Declare only the app permissions required by the integration.
+6. Replace unrestricted `connect-src` and `image-src` values with explicit production endpoints before release.
 
-## Extending the App
+The existing `stripe` dependency is not used by the current UI. Removing it or introducing a backend should be handled as a separate dependency/architecture change with its own tests.
 
-### Adding a New View
+## Add a view
+
 ```bash
 stripe apps add view
 ```
 
-This scaffolds a new view component and registers it in `stripe-app.json`.
+After scaffolding, add or update its component test and run `pnpm check`. The manifest validator verifies that every registered component has a corresponding `src/views/<Component>.tsx` file.
 
-### Implementing Customer List Logic
-Enhance the `Customers` component to:
-1. Access customer data from `userContext` or Stripe API
-2. Render a customer list
-3. Navigate to customer details when clicked
+## Upload
 
-### Implementing Customer Details Logic
-Enhance the `CustomerDetails` component to:
-1. Fetch customer data using customer ID from context
-2. Display customer information
-3. Implement customer-specific actions (e.g., refunds, disputes)
+```bash
+stripe apps upload
+```
 
-## Error Handling & Resilience
+Upload only after local validation and an authorized review of the manifest, permissions, CSP, and application behavior. Uploading is a release action, not part of routine local validation.
 
-### Current State
-- Minimal error handling (try-catch around clipboard operations only)
-- Errors logged to console; no user notifications
-- No recovery mechanisms or retry logic
+## Repository metadata
 
-### Recommended Enhancements
-1. **Error Boundaries**: Wrap views in React error boundaries
-2. **User Notifications**: Display errors to users with clear messages
-3. **API Error Handling**: Implement retry logic and timeout handling for API calls
-4. **Logging**: Add structured logging for debugging and monitoring
-5. **Validation**: Validate user input and API responses
+The package is private. Its existing `~~proprietary~~` license string is non-standard; selecting or applying a license is a separate owner decision and is not changed by routine cleanup.
 
-## Testing Strategy
+## Resources
 
-### Current Coverage
-- Component rendering tests
-- Basic assertions on UI presence
-
-### Recommended Additions
-- **Error Path Testing**: Test error scenarios and exception handling
-- **Interaction Testing**: Verify clipboard and button interactions
-- **Integration Testing**: Test with real Stripe API endpoints (staging)
-- **Edge Cases**: Handle missing data, network failures, invalid inputs
-
-## Resources & Documentation
-
-- [Stripe Apps Documentation](https://stripe.com/docs/stripe-apps)
-- [UI Extension SDK Reference](https://docs.stripe.com/stripe-apps/reference/extensions-sdk-api)
-- [UI Components Guide](https://docs.stripe.com/stripe-apps/components)
-- [Stripe Viewports Reference](https://docs.stripe.com/stripe-apps/reference/viewports)
-- [Stripe CLI Documentation](https://stripe.com/docs/stripe-cli)
-
-## Support
-
-For questions or issues:
-- Check the [Stripe Apps docs](https://stripe.com/docs/stripe-apps)
-- Visit [Stripe Support](https://support.stripe.com/)
-- Join the [Stripe Developers Discord](https://discord.com/invite/stripe)
-
----
-
-**Version**: 0.0.1  
-**Created**: Based on Stripe Apps UI Extension SDK v9.0.0
+- [Stripe Apps documentation](https://stripe.com/docs/stripe-apps)
+- [UI Extension SDK reference](https://docs.stripe.com/stripe-apps/reference/extensions-sdk-api)
+- [UI components](https://docs.stripe.com/stripe-apps/components)
+- [Stripe viewports](https://docs.stripe.com/stripe-apps/reference/viewports)
