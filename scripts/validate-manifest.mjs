@@ -5,14 +5,21 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const allowedJsonFiles = new Set(["stripe-app.json", "package.json"]);
+const componentNamePattern = /^[A-Z][A-Za-z0-9]*$/;
 const errors = [];
 const warnings = [];
 
-function readJson(relativePath) {
+function readJson(fileName) {
+  if (!allowedJsonFiles.has(fileName)) {
+    errors.push(`Refusing to read unapproved JSON file: ${fileName}.`);
+    return null;
+  }
+
   try {
-    return JSON.parse(fs.readFileSync(path.join(root, relativePath), "utf8"));
+    return JSON.parse(fs.readFileSync(path.join(root, fileName), "utf8"));
   } catch (error) {
-    errors.push(`${relativePath}: ${error.message}`);
+    errors.push(`${fileName}: ${error.message}`);
     return null;
   }
 }
@@ -21,9 +28,9 @@ function isObject(value) {
   return value !== null && typeof value === "object" && !Array.isArray(value);
 }
 
-function requireString(object, key, source) {
-  if (typeof object?.[key] !== "string" || !object[key].trim()) {
-    errors.push(`${source}.${key} must be a non-empty string.`);
+function requireString(value, label) {
+  if (typeof value !== "string" || !value.trim()) {
+    errors.push(`${label} must be a non-empty string.`);
   }
 }
 
@@ -31,9 +38,9 @@ const manifest = readJson("stripe-app.json");
 const packageJson = readJson("package.json");
 
 if (isObject(manifest)) {
-  requireString(manifest, "id", "stripe-app.json");
-  requireString(manifest, "version", "stripe-app.json");
-  requireString(manifest, "name", "stripe-app.json");
+  requireString(manifest.id, "stripe-app.json.id");
+  requireString(manifest.version, "stripe-app.json.version");
+  requireString(manifest.name, "stripe-app.json.name");
 
   if (!Array.isArray(manifest.permissions)) {
     errors.push("stripe-app.json.permissions must be an array.");
@@ -53,8 +60,8 @@ if (isObject(manifest)) {
         return;
       }
 
-      requireString(view, "viewport", label);
-      requireString(view, "component", label);
+      requireString(view.viewport, `${label}.viewport`);
+      requireString(view.component, `${label}.component`);
 
       if (viewports.has(view.viewport)) {
         errors.push(`Duplicate viewport: ${view.viewport}.`);
@@ -66,19 +73,26 @@ if (isObject(manifest)) {
       components.add(view.component);
 
       if (typeof view.component === "string" && view.component.trim()) {
-        const source = path.join(root, "src", "views", `${view.component}.tsx`);
-        if (!fs.existsSync(source)) {
-          errors.push(`${label} references missing src/views/${view.component}.tsx.`);
+        if (!componentNamePattern.test(view.component)) {
+          errors.push(
+            `${label}.component must be a PascalCase identifier containing only letters and numbers.`,
+          );
+        } else {
+          const source = path.join(root, "src", "views", `${view.component}.tsx`);
+          if (!fs.existsSync(source)) {
+            errors.push(`${label} references missing src/views/${view.component}.tsx.`);
+          }
         }
       }
     });
   }
 
   const csp = manifest.ui_extension?.content_security_policy;
-  for (const directive of ["connect-src", "image-src"]) {
-    if (csp?.[directive] === null) {
-      warnings.push(`${directive} is unrestricted; restrict it before production use.`);
-    }
+  if (csp?.["connect-src"] === null) {
+    warnings.push("connect-src is unrestricted; restrict it before production use.");
+  }
+  if (csp?.["image-src"] === null) {
+    warnings.push("image-src is unrestricted; restrict it before production use.");
   }
 } else if (manifest !== null) {
   errors.push("stripe-app.json must contain an object at the root.");
