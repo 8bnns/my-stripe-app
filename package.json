@@ -1,9 +1,9 @@
 {
   "name": "com.example.my-stripe-app",
   "version": "0.0.1",
-  "description": "Test",
+  "description": "Stripe Dashboard UI extension with home and customer views.",
   "private": true,
-  "license": "~~proprietary~~",
+  "license": "UNLICENSED",
   "dependencies": {
     "@stripe/ui-extension-sdk": "^9.0.0",
     "stripe": "^13.4.0"
@@ -18,7 +18,9 @@
   },
   "scripts": {
     "lint": "eslint --ext ts,tsx src",
-    "test": "jest"
+    "test": "jest",
+    "test:manifest": "node scripts/validate-manifest.mjs",
+    "check": "pnpm test:manifest && pnpm lint && pnpm test"
   },
   "resolutions": {
     "@types/react": "^17.0.2"

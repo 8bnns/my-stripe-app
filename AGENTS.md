@@ -1,6 +1,10 @@
 # AGENTS.md
 
-This file provides guidance to WARP (warp.dev) when working with code in this repository.
+Guidance for coding agents working in this repository.
+
+## Project scope
+
+This is a private Stripe Dashboard UI Extension built with React and TypeScript. The current views are starter UI only: they do not call a backend, fetch customer data, or perform privileged Stripe API operations.
 
 ## Commands
 
@@ -8,88 +12,67 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 # Install dependencies
 pnpm install
 
-# Run the app locally in the Stripe Dashboard (requires Stripe CLI authenticated)
-stripe apps serve
+# Validate manifest structure, view references, and package metadata
+pnpm test:manifest
 
-# Run all tests
+# Run component tests
 pnpm test
 
-# Run a single test file
+# Run one component test
 pnpm test src/views/Home.test.tsx
 
-# Watch mode
-pnpm test --watch
-
-# Lint (ESLint, TypeScript + TSX files under src/)
+# Lint TypeScript and TSX files under src/
 pnpm lint
 
-# Publish to Stripe
+# Run all local checks
+pnpm check
+
+# Serve locally through the authenticated Stripe CLI
+stripe apps serve
+
+# Upload only as an explicitly authorized release action
 stripe apps upload
 
-# Scaffold a new view component and register it in stripe-app.json
+# Scaffold and register another view
 stripe apps add view
 ```
 
-> Build/bundling is handled entirely by the Stripe CLI (`stripe apps serve` / `stripe apps upload`), not by a pnpm build script. There is no `pnpm build`.
+The Stripe CLI handles build and bundle output. There is no `pnpm build` script.
 
 ## Architecture
 
-This is a **Stripe Dashboard UI Extension** — a React app that renders panels inside the Stripe Dashboard at specific locations called viewports.
+`stripe-app.json` maps Stripe Dashboard viewports to components in `src/views/`:
 
-### Viewport → Component mapping (`stripe-app.json`)
+| Viewport | Component |
+| --- | --- |
+| `stripe.dashboard.home.overview` | `Home` |
+| `stripe.dashboard.customer.list` | `Customers` |
+| `stripe.dashboard.customer.detail` | `CustomerDetails` |
 
-| Viewport | Component | Mounted on |
-|---|---|---|
-| `stripe.dashboard.home.overview` | `Home` | Dashboard home |
-| `stripe.dashboard.customer.list` | `Customers` | Customer list page |
-| `stripe.dashboard.customer.detail` | `CustomerDetails` | Customer detail page |
+Every view receives `ExtensionContextValue` and renders inside `ContextView` from `@stripe/ui-extension-sdk/ui`. Views are isolated; do not assume shared state or inter-view communication.
 
-The Stripe Dashboard reads `stripe-app.json` to know which React component to mount at each location. Views are isolated — there is no inter-component communication.
+Common SDK imports:
 
-### View component contract
+- UI components: `@stripe/ui-extension-sdk/ui`
+- Context types: `@stripe/ui-extension-sdk/context`
+- Utilities: `@stripe/ui-extension-sdk/utils`
+- Test helpers: `@stripe/ui-extension-sdk/testing`
 
-Every view is a React function component that receives `ExtensionContextValue` (destructured as `{ userContext, environment }`) injected by the Dashboard at runtime. All views must wrap their content in `ContextView` from `@stripe/ui-extension-sdk/ui`, which provides the standard panel chrome (title, brand icon/color, footer, external link).
+## Tests and validation
 
-```tsx
-import type { ExtensionContextValue } from "@stripe/ui-extension-sdk/context";
-import { ContextView, Box } from "@stripe/ui-extension-sdk/ui";
+Tests use the SDK's `render` and `getMockContextProps` helpers, not React Testing Library. Jest inherits `@stripe/ui-extension-tools/jest.config.ui-extension`.
 
-const MyView = ({ userContext, environment }: ExtensionContextValue) => (
-  <ContextView title="..." brandColor="#..." brandIcon={BrandIcon}>
-    <Box>...</Box>
-  </ContextView>
-);
-export default MyView;
-```
+When changing `stripe-app.json`, run `pnpm test:manifest`. When adding a view, add its source file and component test, then run `pnpm check`. Do not claim that Stripe CLI serving or uploading was tested unless it was actually run with authorized credentials.
 
-### SDK imports
+## Security requirements
 
-- **UI components** — `@stripe/ui-extension-sdk/ui` (`ContextView`, `Box`, `Button`, `Link`, `Icon`, `Inline`, `Divider`, …)
-- **Context types** — `@stripe/ui-extension-sdk/context` (`ExtensionContextValue`)
-- **Utilities** — `@stripe/ui-extension-sdk/utils` (`clipboardWriteText`, etc.)
-- **Testing** — `@stripe/ui-extension-sdk/testing` (`render`, `getMockContextProps`)
+- Never commit Stripe secret keys, session credentials, or real customer data.
+- Never import the `stripe` Node.js SDK into a UI view for secret-key API calls.
+- Put privileged Stripe API operations in a separately secured backend with authentication, authorization, server-side validation, and secret management.
+- Keep `permissions` least-privilege and review any manifest permission change explicitly.
+- Treat unrestricted `connect-src` and `image-src` values as production work to restrict, not as secure defaults.
+- Do not run `stripe apps upload` as a test or without explicit release authorization.
 
-### Testing pattern
+## Dependency and license discipline
 
-Tests use the SDK's own `render` and `getMockContextProps` helpers — **not** React Testing Library or `@testing-library/react`. Jest config inherits from `@stripe/ui-extension-tools/jest.config.ui-extension`.
-
-```tsx
-import { render, getMockContextProps } from "@stripe/ui-extension-sdk/testing";
-import { ContextView } from "@stripe/ui-extension-sdk/ui";
-import Home from "./Home";
-
-describe("Home", () => {
-  it("renders ContextView", () => {
-    const { wrapper } = render(<Home {...getMockContextProps()} />);
-    expect(wrapper.find(ContextView)).toContainText("save to reload this view");
-  });
-});
-```
-
-### TypeScript & linting
-
-`tsconfig.json` extends `@stripe/ui-extension-tools/tsconfig.ui-extension` with no overrides. ESLint config is inlined in `package.json` and extends `@stripe/ui-extension-tools/eslintrc.ui-extension.js`.
-
-### Adding Stripe API calls
-
-The `stripe` Node.js package is already listed as a dependency for future server-side use. Permissions for any Stripe API access must be declared in the `permissions` array in `stripe-app.json` before they will be available at runtime.
+The `stripe` dependency is currently unused by the UI. Remove or use it only through a deliberate dependency/architecture change with updated lockfiles and tests. The package is private and `UNLICENSED`; do not replace that metadata with an open-source license without the owner's decision.
