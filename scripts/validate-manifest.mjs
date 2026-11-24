@@ -1,27 +1,31 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const allowedJsonFiles = new Set(["stripe-app.json", "package.json"]);
 const componentNamePattern = /^[A-Z][A-Za-z0-9]*$/;
 const errors = [];
 const warnings = [];
 
-function readJson(fileName) {
-  if (!allowedJsonFiles.has(fileName)) {
-    errors.push(`Refusing to read unapproved JSON file: ${fileName}.`);
-    return null;
-  }
+let manifest = null;
+let packageJson = null;
+let viewFiles = new Set();
 
-  try {
-    return JSON.parse(fs.readFileSync(path.join(root, fileName), "utf8"));
-  } catch (error) {
-    errors.push(`${fileName}: ${error.message}`);
-    return null;
-  }
+try {
+  manifest = JSON.parse(fs.readFileSync("stripe-app.json", "utf8"));
+} catch (error) {
+  errors.push(`stripe-app.json: ${error.message}`);
+}
+
+try {
+  packageJson = JSON.parse(fs.readFileSync("package.json", "utf8"));
+} catch (error) {
+  errors.push(`package.json: ${error.message}`);
+}
+
+try {
+  viewFiles = new Set(fs.readdirSync("src/views"));
+} catch (error) {
+  errors.push(`src/views: ${error.message}`);
 }
 
 function isObject(value) {
@@ -33,9 +37,6 @@ function requireString(value, label) {
     errors.push(`${label} must be a non-empty string.`);
   }
 }
-
-const manifest = readJson("stripe-app.json");
-const packageJson = readJson("package.json");
 
 if (isObject(manifest)) {
   requireString(manifest.id, "stripe-app.json.id");
@@ -77,11 +78,8 @@ if (isObject(manifest)) {
           errors.push(
             `${label}.component must be a PascalCase identifier containing only letters and numbers.`,
           );
-        } else {
-          const source = path.join(root, "src", "views", `${view.component}.tsx`);
-          if (!fs.existsSync(source)) {
-            errors.push(`${label} references missing src/views/${view.component}.tsx.`);
-          }
+        } else if (!viewFiles.has(`${view.component}.tsx`)) {
+          errors.push(`${label} references missing src/views/${view.component}.tsx.`);
         }
       }
     });

@@ -107,7 +107,7 @@ Upload only after local validation and an authorized review of the manifest, per
 
 ## Repository metadata
 
-The package is private. Its existing `~~proprietary~~` license string is non-standard; selecting or applying a license is a separate owner decision and is not changed by routine cleanup.
+The package is private and marked `UNLICENSED`, which records that no open-source license is granted. Changing that licensing policy remains a separate owner decision.
 
 ## Resources
 

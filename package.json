@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Stripe Dashboard UI extension with home and customer views.",
   "private": true,
-  "license": "~~proprietary~~",
+  "license": "UNLICENSED",
   "dependencies": {
     "@stripe/ui-extension-sdk": "^9.0.0",
     "stripe": "^13.4.0"

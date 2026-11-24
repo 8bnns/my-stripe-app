@@ -75,4 +75,4 @@ When changing `stripe-app.json`, run `pnpm test:manifest`. When adding a view, a
 
 ## Dependency and license discipline
 
-The `stripe` dependency is currently unused by the UI. Remove or use it only through a deliberate dependency/architecture change with updated lockfiles and tests. Do not change the existing non-standard license metadata without the owner's license decision.
+The `stripe` dependency is currently unused by the UI. Remove or use it only through a deliberate dependency/architecture change with updated lockfiles and tests. The package is private and `UNLICENSED`; do not replace that metadata with an open-source license without the owner's decision.
